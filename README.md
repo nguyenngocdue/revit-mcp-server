@@ -1,6 +1,6 @@
 # Revit MCP Server
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that bridges AI assistants (Claude) with Autodesk Revit. It communicates with a Revit plugin via TCP/JSON-RPC 2.0, enabling AI to query, create, and modify Revit elements through natural language.
+A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that bridges AI assistants with Autodesk Revit. Works with any MCP-compatible client including **Claude Desktop**, **VS Code Copilot**, **Cursor**, **Windsurf**, **Cline**, and more. It communicates with a Revit plugin via TCP/JSON-RPC 2.0, enabling AI to query, create, and modify Revit elements through natural language.
 
 ## Architecture
 
