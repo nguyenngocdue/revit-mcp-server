@@ -3,16 +3,17 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-export async function registerTools(server: McpServer) {
-  // Get the directory path of the current file
+// Cache loaded register functions so dynamic import only runs once
+type RegisterFn = (server: McpServer) => void;
+let cachedRegisterFns: RegisterFn[] | null = null;
+
+async function loadRegisterFns(): Promise<RegisterFn[]> {
+  if (cachedRegisterFns) return cachedRegisterFns;
+
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
 
-  // Read all files in the tools directory
-  const files = fs.readdirSync(__dirname);
-
-  // Filter for .ts or .js files, excluding index, register, and declaration files
-  const toolFiles = files.filter(
+  const files = fs.readdirSync(__dirname).filter(
     (file) =>
       (file.endsWith(".ts") || file.endsWith(".js")) &&
       !file.endsWith(".d.ts") &&
@@ -23,28 +24,27 @@ export async function registerTools(server: McpServer) {
       file !== "register.js"
   );
 
-  // Dynamically import and register each tool
-  for (const file of toolFiles) {
+  const fns: RegisterFn[] = [];
+  for (const file of files) {
     try {
-      // Build the import path
       const importPath = `./${file.replace(/\.(ts|js)$/, ".js")}`;
-
-      // Dynamically import the module
       const module = await import(importPath);
-
-      // Find and execute the registration function
-      const registerFunctionName = Object.keys(module).find(
+      const fnName = Object.keys(module).find(
         (key) => key.startsWith("register") && typeof module[key] === "function"
       );
-
-      if (registerFunctionName) {
-        module[registerFunctionName](server);
-        console.error(`Registered tool: ${file}`);
-      } else {
-        console.warn(`Warning: No registration function found in file ${file}`);
-      }
+      if (fnName) fns.push(module[fnName]);
     } catch (error) {
-      console.error(`Error registering tool ${file}:`, error);
+      console.error(`Error loading tool ${file}:`, error);
     }
+  }
+
+  cachedRegisterFns = fns;
+  return fns;
+}
+
+export async function registerTools(server: McpServer) {
+  const fns = await loadRegisterFns();
+  for (const fn of fns) {
+    fn(server);
   }
 }
