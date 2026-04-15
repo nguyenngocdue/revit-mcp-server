@@ -3,7 +3,7 @@
 		"deepbim-mcp-server-v2": {
 			"type": "stdio",
 			"command": "node",
-			"args": ["C:\\Users\\nguye\\AppData\\Roaming\\Autodesk\\Revit\\Addins\\2025\\DeepBimRevitMCPlugin\\server\\index.js"]
+			"args": ["E:\\C# Tool Revit\\revit-mcp\\revit-mcp-server\\build\\index.js"]
 		}
 	},
 	"inputs": []
