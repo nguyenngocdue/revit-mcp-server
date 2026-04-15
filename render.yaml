@@ -1,9 +1,10 @@
 services:
   - type: web
     name: revit-mcp-server
-    runtime: docker
+    runtime: node
     region: singapore
-    dockerfilePath: ./Dockerfile
+    buildCommand: npm install -g pnpm@10.22.0 && pnpm install --frozen-lockfile && pnpm build
+    startCommand: node build/index.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

@@ -29,19 +29,6 @@ async function startHttp() {
   app.use(cors());
   app.use(express.json());
 
-  // Optional API key auth
-  app.use((req, res, next) => {
-    if (req.path === "/health" || req.path === "/mcp/tools") return next();
-    if (API_KEY) {
-      const authHeader = req.headers.authorization;
-      if (authHeader !== `Bearer ${API_KEY}`) {
-        res.status(401).json({ error: "Unauthorized" });
-        return;
-      }
-    }
-    next();
-  });
-
   // Health check — Render dùng để kiểm tra service còn sống
   app.get("/health", (_req, res) => {
     res.json({ status: "ok" });
