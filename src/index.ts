@@ -34,6 +34,91 @@ async function startHttp() {
     res.json({ status: "ok" });
   });
 
+  // Landing page
+  app.get("/", (_req, res) => {
+    const uptime = process.uptime();
+    const uptimeStr = `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`;
+    res.setHeader("Content-Type", "text/html");
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DeepBIM MCP Server</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { background: #1a1d2e; border: 1px solid #2d3148; border-radius: 16px; padding: 48px; max-width: 560px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    .badge { display: inline-block; background: #22c55e22; color: #22c55e; border: 1px solid #22c55e44; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 24px; }
+    h1 { font-size: 28px; font-weight: 700; color: #f8fafc; margin-bottom: 4px; }
+    .sub { color: #64748b; font-size: 14px; margin-bottom: 32px; }
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px; }
+    .meta-item { background: #0f1117; border: 1px solid #2d3148; border-radius: 10px; padding: 14px 16px; }
+    .meta-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .meta-value { font-size: 15px; font-weight: 600; color: #f1f5f9; }
+    .divider { border: none; border-top: 1px solid #2d3148; margin: 0 0 24px; }
+    .endpoints { display: flex; flex-direction: column; gap: 8px; }
+    .ep { display: flex; align-items: center; gap: 12px; background: #0f1117; border: 1px solid #2d3148; border-radius: 8px; padding: 10px 14px; text-decoration: none; transition: border-color 0.15s; }
+    .ep:hover { border-color: #6366f1; }
+    .method { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; min-width: 40px; text-align: center; }
+    .get { background: #0ea5e922; color: #38bdf8; }
+    .post { background: #a855f722; color: #c084fc; }
+    .all { background: #f59e0b22; color: #fbbf24; }
+    .ep-path { font-size: 13px; font-family: monospace; color: #e2e8f0; }
+    .ep-desc { font-size: 12px; color: #64748b; margin-left: auto; }
+    .footer { margin-top: 28px; text-align: center; font-size: 12px; color: #475569; }
+    .footer a { color: #6366f1; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">● ONLINE</div>
+    <h1>DeepBIM MCP Server</h1>
+    <p class="sub">Model Context Protocol server for Autodesk Revit</p>
+    <div class="meta">
+      <div class="meta-item">
+        <div class="meta-label">Version</div>
+        <div class="meta-value">1.0.0</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Tools</div>
+        <div class="meta-value">${toolRegistry.length} registered</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Uptime</div>
+        <div class="meta-value">${uptimeStr}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Protocol</div>
+        <div class="meta-value">MCP 2024-11</div>
+      </div>
+    </div>
+    <hr class="divider" />
+    <div class="endpoints">
+      <a class="ep" href="/mcp/tools">
+        <span class="method get">GET</span>
+        <span class="ep-path">/mcp/tools</span>
+        <span class="ep-desc">List all tools</span>
+      </a>
+      <div class="ep">
+        <span class="method all">ALL</span>
+        <span class="ep-path">/mcp</span>
+        <span class="ep-desc">MCP Streamable HTTP</span>
+      </div>
+      <a class="ep" href="/health">
+        <span class="method get">GET</span>
+        <span class="ep-path">/health</span>
+        <span class="ep-desc">Health check</span>
+      </a>
+    </div>
+    <div class="footer">
+      Built by <a href="https://github.com/deepbim" target="_blank">DeepBIM</a> &mdash; Powered by MCP SDK
+    </div>
+  </div>
+</body>
+</html>`);
+  });
+
   // List all registered MCP tools (public, no auth required)
   app.get("/mcp/tools", (_req, res) => {
     res.json({ count: toolRegistry.length, tools: toolRegistry });
