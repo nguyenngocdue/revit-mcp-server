@@ -4,6 +4,10 @@
 			"type": "stdio",
 			"command": "node",
 			"args": ["E:\\C# Tool Revit\\revit-mcp\\revit-mcp-server\\build\\index.js"]
+		},
+		"deepbim-mcp-server-http": {
+			"type": "http",
+			"url": "https://revit-mcp-server.onrender.com/mcp"
 		}
 	},
 	"inputs": []

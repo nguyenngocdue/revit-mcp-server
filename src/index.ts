@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { randomBytes } from "crypto";
-import { randomUUID } from "crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -124,35 +123,22 @@ async function startHttp() {
     res.json({ count: toolRegistry.length, tools: toolRegistry });
   });
 
-  const transports = new Map<string, StreamableHTTPServerTransport>();
-
-  // Single MCP endpoint — handles GET (stream) and POST (messages)
-  app.all("/mcp", async (req, res) => {
-    const sessionId = req.headers["mcp-session-id"] as string | undefined;
-    let transport: StreamableHTTPServerTransport;
-
-    if (sessionId && transports.has(sessionId)) {
-      transport = transports.get(sessionId)!;
-    } else if (!sessionId && req.method === "POST") {
-      // New session
-      transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
-      });
-      await server.connect(transport);
-      transport.onclose = () => {
-        if (transport.sessionId) transports.delete(transport.sessionId);
-        console.error(`Session closed: ${transport.sessionId}`);
-      };
-      if (transport.sessionId) {
-        transports.set(transport.sessionId, transport);
-        console.error(`New session: ${transport.sessionId}`);
-      }
-    } else {
-      res.status(400).json({ error: "Invalid or missing mcp-session-id" });
-      return;
-    }
-
+  // MCP Streamable HTTP — stateless: fresh server per request
+  app.post("/mcp", async (req, res) => {
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined, // stateless
+    });
+    const sessionServer = new McpServer({
+      name: "revit-mcp-server",
+      version: "1.0.0",
+    });
+    await registerTools(sessionServer);
+    await sessionServer.connect(transport);
     await transport.handleRequest(req, res, req.body);
+  });
+
+  app.get("/mcp", async (_req, res) => {
+    res.status(405).json({ error: "Use POST for MCP Streamable HTTP" });
   });
 
   const port = parseInt(process.env.PORT || "3000");
