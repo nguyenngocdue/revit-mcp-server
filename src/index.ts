@@ -15,6 +15,14 @@ const server = new McpServer({
 const API_KEY = process.env.API_KEY || randomBytes(32).toString("hex");
 console.error(`API_KEY: ${API_KEY}`);
 
+// Collect tool metadata by intercepting server.tool()
+const toolRegistry: Array<{ name: string; description: string }> = [];
+const _originalTool = server.tool.bind(server);
+(server as any).tool = (name: string, description: string, ...rest: any[]) => {
+  toolRegistry.push({ name, description });
+  return (_originalTool as any)(name, description, ...rest);
+};
+
 async function startHttp() {
   const app = express();
   app.use(cors());
@@ -22,7 +30,7 @@ async function startHttp() {
 
   // Optional API key auth
   app.use((req, res, next) => {
-    if (req.path === "/health") return next();
+    if (req.path === "/health" || req.path === "/mcp/tools") return next();
     if (API_KEY) {
       const authHeader = req.headers.authorization;
       if (authHeader !== `Bearer ${API_KEY}`) {
@@ -36,6 +44,11 @@ async function startHttp() {
   // Health check — Render dùng để kiểm tra service còn sống
   app.get("/health", (_req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // List all registered MCP tools (public, no auth required)
+  app.get("/mcp/tools", (_req, res) => {
+    res.json({ count: toolRegistry.length, tools: toolRegistry });
   });
 
   const transports: Record<string, SSEServerTransport> = {};

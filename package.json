@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Minimal MCP Server for Revit",
   "type": "module",
+  "packageManager": "pnpm@10.22.0",
   "main": "build/index.js",
   "bin": {
     "revit-mcp-server": "./build/index.js"

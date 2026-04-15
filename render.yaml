@@ -3,7 +3,7 @@ services:
     name: revit-mcp-server
     runtime: node
     region: singapore
-    buildCommand: npm install -g pnpm && pnpm install && pnpm build
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
     startCommand: pnpm start
     healthCheckPath: /health
     envVars:
