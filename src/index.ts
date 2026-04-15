@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { randomBytes } from "crypto";
+import { randomUUID } from "crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { registerTools } from "./tools/register.js";
 import express from "express";
 import cors from "cors";
@@ -51,28 +52,35 @@ async function startHttp() {
     res.json({ count: toolRegistry.length, tools: toolRegistry });
   });
 
-  const transports: Record<string, SSEServerTransport> = {};
+  const transports = new Map<string, StreamableHTTPServerTransport>();
 
-  // SSE endpoint — client kết nối vào đây
-  app.get("/sse", async (req, res) => {
-    const transport = new SSEServerTransport("/messages", res);
-    transports[transport.sessionId] = transport;
-    res.on("close", () => {
-      delete transports[transport.sessionId];
-    });
-    await server.connect(transport);
-    console.error(`Client connected: ${transport.sessionId}`);
-  });
+  // Single MCP endpoint — handles GET (stream) and POST (messages)
+  app.all("/mcp", async (req, res) => {
+    const sessionId = req.headers["mcp-session-id"] as string | undefined;
+    let transport: StreamableHTTPServerTransport;
 
-  // Messages endpoint — client gửi request qua đây
-  app.post("/messages", async (req, res) => {
-    const sessionId = req.query.sessionId as string;
-    const transport = transports[sessionId];
-    if (!transport) {
-      res.status(400).json({ error: "No active SSE connection for sessionId" });
+    if (sessionId && transports.has(sessionId)) {
+      transport = transports.get(sessionId)!;
+    } else if (!sessionId && req.method === "POST") {
+      // New session
+      transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: () => randomUUID(),
+      });
+      await server.connect(transport);
+      transport.onclose = () => {
+        if (transport.sessionId) transports.delete(transport.sessionId);
+        console.error(`Session closed: ${transport.sessionId}`);
+      };
+      if (transport.sessionId) {
+        transports.set(transport.sessionId, transport);
+        console.error(`New session: ${transport.sessionId}`);
+      }
+    } else {
+      res.status(400).json({ error: "Invalid or missing mcp-session-id" });
       return;
     }
-    await transport.handlePostMessage(req, res);
+
+    await transport.handleRequest(req, res, req.body);
   });
 
   const port = parseInt(process.env.PORT || "3000");
