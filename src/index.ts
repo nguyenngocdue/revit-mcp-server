@@ -155,6 +155,69 @@ async function startHttp() {
     });
   });
 
+  // Debug send — test full command/response cycle with Revit
+  app.get("/debug-send", async (_req, res) => {
+    const host = process.env.REVIT_HOST || "localhost";
+    const portNum = process.env.REVIT_PORT ? parseInt(process.env.REVIT_PORT, 10) : 8080;
+    const net = await import("net");
+
+    const result: any = { host, port: portNum, steps: [] };
+
+    try {
+      const response = await new Promise<string>((resolve, reject) => {
+        const socket = new net.Socket();
+        let buffer = "";
+        let connected = false;
+
+        socket.setTimeout(10000);
+
+        socket.on("connect", () => {
+          connected = true;
+          result.steps.push("TCP connected");
+          const cmd = JSON.stringify({ jsonrpc: "2.0", method: "say_hello", params: { message: "debug-test" }, id: "debug1" });
+          socket.write(cmd);
+          result.steps.push(`Sent: ${cmd}`);
+        });
+
+        socket.on("data", (data) => {
+          buffer += data.toString();
+          result.steps.push(`Received data: ${data.toString()}`);
+          try {
+            JSON.parse(buffer);
+            socket.destroy();
+            resolve(buffer);
+          } catch { /* incomplete */ }
+        });
+
+        socket.on("timeout", () => {
+          socket.destroy();
+          result.steps.push("Timed out waiting for response");
+          reject(new Error(`Timeout after 10s. Connected=${connected}. Buffer="${buffer}"`));
+        });
+
+        socket.on("error", (e) => {
+          result.steps.push(`Error: ${e.message}`);
+          reject(e);
+        });
+
+        socket.on("close", () => {
+          result.steps.push("Socket closed");
+          if (buffer) resolve(buffer);
+        });
+
+        socket.connect(portNum, host);
+      });
+
+      result.success = true;
+      result.response = JSON.parse(response);
+    } catch (e: any) {
+      result.success = false;
+      result.error = e.message;
+    }
+
+    res.json(result);
+  });
+
   // MCP Streamable HTTP — stateless: fresh server per request
   app.post("/mcp", async (req, res) => {
     const transport = new StreamableHTTPServerTransport({
