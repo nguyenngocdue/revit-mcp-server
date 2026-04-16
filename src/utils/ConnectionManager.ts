@@ -1,4 +1,5 @@
 import { RevitClientConnection } from "./SocketClient.js";
+import { isHttpMode, sendRevitCommandHttp } from "./RevitHttpClient.js";
 import * as net from "net";
 
 let connectionMutex: Promise<void> = Promise.resolve();
@@ -43,6 +44,15 @@ async function findRevitPort(): Promise<number> {
 export async function withRevitConnection<T>(
   operation: (client: RevitClientConnection) => Promise<T>
 ): Promise<T> {
+  // HTTP mode — khi REVIT_HTTP_URL được set (dùng Cloudflare Tunnel hoặc ngrok HTTP)
+  if (isHttpMode()) {
+    const httpClient = {
+      sendCommand: (method: string, params: any = {}) => sendRevitCommandHttp(method, params),
+    } as any;
+    return operation(httpClient);
+  }
+
+  // TCP mode — local hoặc ngrok TCP tunnel
   const previousMutex = connectionMutex;
   let releaseMutex: () => void;
   connectionMutex = new Promise<void>((resolve) => {
