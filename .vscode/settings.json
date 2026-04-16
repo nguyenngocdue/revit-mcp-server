@@ -1,0 +1,10 @@
+{
+    "chat.mcp.serverSampling": {
+        "revit-mcp-server/.vscode/mcp.json: deepbim-mcp-server-v2": {
+            "allowedModels": [
+                "copilot/auto",
+                "copilotcli/claude-sonnet-4.6"
+            ]
+        }
+    }
+}

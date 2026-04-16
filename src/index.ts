@@ -123,6 +123,38 @@ async function startHttp() {
     res.json({ count: toolRegistry.length, tools: toolRegistry });
   });
 
+  // Debug endpoint — show Revit connection config and test TCP
+  app.get("/debug", async (_req, res) => {
+    const host = process.env.REVIT_HOST || "localhost";
+    const port = process.env.REVIT_PORT || "(scan 8080-8099)";
+    const portNum = process.env.REVIT_PORT ? parseInt(process.env.REVIT_PORT, 10) : 8080;
+
+    let tcpStatus = "untested";
+    let tcpError = "";
+    try {
+      const net = await import("net");
+      await new Promise<void>((resolve, reject) => {
+        const socket = new net.Socket();
+        socket.setTimeout(3000);
+        socket.on("connect", () => { socket.destroy(); resolve(); });
+        socket.on("timeout", () => { socket.destroy(); reject(new Error("timeout")); });
+        socket.on("error", (e) => { socket.destroy(); reject(e); });
+        socket.connect(portNum, host);
+      });
+      tcpStatus = "connected";
+    } catch (e: any) {
+      tcpStatus = "failed";
+      tcpError = e.message;
+    }
+
+    res.json({
+      revit_host: host,
+      revit_port: port,
+      tcp_test: tcpStatus,
+      tcp_error: tcpError || undefined,
+    });
+  });
+
   // MCP Streamable HTTP — stateless: fresh server per request
   app.post("/mcp", async (req, res) => {
     const transport = new StreamableHTTPServerTransport({
