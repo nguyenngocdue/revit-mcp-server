@@ -6,6 +6,11 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { registerTools } from "./tools/register.js";
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const server = new McpServer({
   name: "revit-mcp-server",
@@ -27,6 +32,7 @@ async function startHttp() {
   const app = express();
   app.use(cors());
   app.use(express.json());
+  app.use(express.static(path.join(__dirname, "..", "public")));
 
   // Health check — Render dùng để kiểm tra service còn sống
   app.get("/health", (_req, res) => {
@@ -44,6 +50,7 @@ async function startHttp() {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DeepBIM MCP Server</title>
+  <link rel="icon" type="image/png" href="/logos/logo_no_bg.png" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
