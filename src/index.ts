@@ -143,7 +143,7 @@ async function startHttp() {
 
   const port = parseInt(process.env.PORT || "3000");
   app.listen(port, () => {
-    console.error(`Revit MCP Server (HTTP/SSE) listening on port ${port}`);
+    console.error(`Revit MCP Server (HTTP/Streamable) listening on port ${port}`);
   });
 }
 
