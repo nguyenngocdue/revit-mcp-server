@@ -52,18 +52,21 @@ export async function withRevitConnection<T>(
 
   const host = REVIT_HOST_OVERRIDE ?? "localhost";
   const port = REVIT_PORT_OVERRIDE ?? (await findRevitPort());
+  console.error(`[Revit] Connecting to ${host}:${port}`);
   const revitClient = new RevitClientConnection(host, port);
 
   try {
     if (!revitClient.isConnected) {
       await new Promise<void>((resolve, reject) => {
         const onConnect = () => {
+          console.error(`[Revit] TCP connected to ${host}:${port}`);
           revitClient.socket.removeListener("connect", onConnect);
           revitClient.socket.removeListener("error", onError);
           resolve();
         };
 
         const onError = (error: any) => {
+          console.error(`[Revit] TCP error: ${error.message}`);
           revitClient.socket.removeListener("connect", onConnect);
           revitClient.socket.removeListener("error", onError);
           reject(new Error("Failed to connect to Revit plugin"));
@@ -75,6 +78,7 @@ export async function withRevitConnection<T>(
         revitClient.connect();
 
         setTimeout(() => {
+          console.error(`[Revit] TCP connection timed out after 5s`);
           revitClient.socket.removeListener("connect", onConnect);
           revitClient.socket.removeListener("error", onError);
           reject(new Error("Connection to Revit timed out"));
@@ -82,7 +86,10 @@ export async function withRevitConnection<T>(
       });
     }
 
-    return await operation(revitClient);
+    console.error(`[Revit] Sending command...`);
+    const result = await operation(revitClient);
+    console.error(`[Revit] Got response`);
+    return result;
   } finally {
     revitClient.disconnect();
     releaseMutex!();
