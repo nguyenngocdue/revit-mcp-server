@@ -1,4 +1,180 @@
-# Guide to Deploy MCP Server lên Render
+# Deploy DeepBIM MCP Server lên Render
+
+---
+
+## 1. Kiến trúc
+
+```
+VS Code / Claude
+      │
+      │  HTTP POST /mcp  (MCP Streamable HTTP)
+      ▼
+DeepBIM MCP Server  (Render)
+      │
+      │  HTTP POST /api/command  (JSON-RPC)
+      ▼
+  REVIT_URL  (ngrok tunnel hoặc public endpoint)
+      │
+      ▼
+Revit Plugin  (máy local, port 8080)
+```
+
+### Transport được dùng
+
+| Thành phần | Transport |
+|---|---|
+| VS Code ↔ MCP Server | **MCP Streamable HTTP** (stateless, POST /mcp) |
+| MCP Server ↔ Revit | **HTTP** (POST /api/command qua `HttpClient`) |
+
+---
+
+## 2. Yêu cầu
+
+- Tài khoản [Render](https://dashboard.render.com)
+- Tài khoản [ngrok](https://ngrok.com) (free tier đủ dùng)
+- Revit plugin đang chạy HTTP server trên máy local (port 8080)
+- Repo đã push lên GitHub
+
+---
+
+## 3. Cấu trúc file quan trọng
+
+```
+src/
+  index.ts              — Express server, endpoint /mcp, /mcp/tools, /health, /
+  tools/
+    register.ts         — Load & cache tool modules, register vào McpServer
+  utils/
+    HttpClient.ts       — Gửi JSON-RPC tới Revit qua HTTP fetch
+    ConnectionManager.ts — Tạo HttpRevitClient từ REVIT_URL env var
+render.yaml             — Config deploy Render
+Dockerfile              — Docker build (tuỳ chọn)
+```
+
+---
+
+## 4. Expose Revit Plugin ra internet (ngrok)
+
+Revit plugin phải listen HTTP tại `POST /api/command`, nhận JSON-RPC và trả response.
+
+```bash
+# Chạy ngrok tunnel tới port Revit plugin
+ngrok http 8080
+```
+
+Kết quả:
+```
+Forwarding  https://abc123.ngrok-free.app -> http://localhost:8080
+```
+
+Lưu lại URL này — sẽ dùng làm `REVIT_URL` trên Render.
+
+> **Lưu ý:** Free plan ngrok đổi URL mỗi lần restart. Dùng paid plan hoặc cập nhật `REVIT_URL` trên Render mỗi lần.
+
+---
+
+## 5. Deploy lên Render
+
+### 5.1. Push code lên GitHub
+
+```bash
+git add .
+git commit -m "feat: HTTP transport for Render deployment"
+git push
+```
+
+### 5.2. Tạo Web Service
+
+1. Vào [dashboard.render.com](https://dashboard.render.com) → **New** → **Web Service**
+2. Connect GitHub repo
+3. Render tự đọc `render.yaml` — không cần cấu hình thêm
+
+### 5.3. Cấu hình thủ công trên dashboard (nếu không dùng render.yaml)
+
+| Trường | Giá trị |
+|---|---|
+| **Runtime** | Node |
+| **Region** | Singapore |
+| **Build Command** | `npm install -g pnpm@10.22.0 && pnpm install --frozen-lockfile && pnpm build` |
+| **Start Command** | `node build/index.js` |
+| **Health Check Path** | `/health` |
+
+### 5.4. Environment Variables
+
+| Key | Value | Bắt buộc |
+|---|---|---|
+| `NODE_ENV` | `production` | ✓ |
+| `MCP_TRANSPORT` | `http` | ✓ |
+| `REVIT_URL` | `https://abc123.ngrok-free.app` | ✓ |
+| `API_KEY` | (để trống = server tự sinh, xem log) | Không |
+
+---
+
+## 6. Kết nối VS Code
+
+Sau khi deploy, Render cấp URL dạng:
+```
+https://revit-mcp-server.onrender.com
+```
+
+Thêm vào `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "deepbim-mcp-server-http": {
+      "type": "http",
+      "url": "https://revit-mcp-server.onrender.com/mcp"
+    }
+  }
+}
+```
+
+---
+
+## 7. Endpoints
+
+| Method | Path | Mô tả | Auth |
+|---|---|---|---|
+| `GET` | `/` | Landing page — version, uptime, tool count | Không |
+| `GET` | `/health` | Health check cho Render | Không |
+| `GET` | `/mcp/tools` | Danh sách tất cả tools đã đăng ký | Không |
+| `POST` | `/mcp` | MCP Streamable HTTP endpoint | Không |
+
+---
+
+## 8. Cách server hoạt động (stateless)
+
+Mỗi request tới `/mcp`:
+1. Tạo `StreamableHTTPServerTransport` mới (`sessionIdGenerator: undefined`)
+2. Tạo `McpServer` mới
+3. Gọi `registerTools(sessionServer)` — dùng cache, không re-import
+4. `sessionServer.connect(transport)` — không bao giờ lỗi "already connected"
+5. Xử lý request, trả response, kết thúc
+
+Không cần lưu session — phù hợp với Render (có thể có nhiều instance, restart bất kỳ lúc).
+
+---
+
+## 9. Troubleshooting
+
+### `Cannot find module 'build/index.js'`
+Build command chưa chạy `tsc`. Kiểm tra Build Command trên Render dashboard đã có `pnpm build` chưa.
+
+### `Already connected to a transport`
+Code cũ — pull code mới và redeploy.
+
+### `Invalid or missing mcp-session-id`
+Code cũ dùng stateful mode — pull code mới và redeploy.
+
+### Revit không phản hồi
+- Kiểm tra ngrok đang chạy
+- Kiểm tra `REVIT_URL` env var trên Render đúng URL ngrok
+- Kiểm tra Revit plugin listen `POST /api/command`
+
+### Render free plan bị sleep sau 15 phút
+Dùng [UptimeRobot](https://uptimerobot.com) ping `/health` mỗi 10 phút, hoặc nâng lên Starter plan.
+
 
 Hướng dẫn từng bước để deploy Revit MCP Server lên [Render](https://render.com) và cấu hình kết nối từ xa với Revit plugin.
 
