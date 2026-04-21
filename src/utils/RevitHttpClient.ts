@@ -6,15 +6,24 @@
  * Không cần mutex vì HTTP là stateless request/response.
  */
 
-const REVIT_HTTP_URL = process.env.REVIT_HTTP_URL;
+let revitHttpUrl: string | undefined = process.env.REVIT_HTTP_URL;
 const REVIT_COMMAND_TIMEOUT_MS = 120_000; // 2 phút
 
+/** Cập nhật URL lúc runtime — gọi từ endpoint /set-revit-url */
+export function setRevitHttpUrl(url: string): void {
+  revitHttpUrl = url;
+}
+
+export function getRevitHttpUrl(): string | undefined {
+  return revitHttpUrl;
+}
+
 export function isHttpMode(): boolean {
-  return !!REVIT_HTTP_URL;
+  return !!revitHttpUrl;
 }
 
 export async function sendRevitCommandHttp(method: string, params: any = {}): Promise<any> {
-  if (!REVIT_HTTP_URL) {
+  if (!revitHttpUrl) {
     throw new Error("REVIT_HTTP_URL is not set");
   }
 
@@ -30,8 +39,8 @@ export async function sendRevitCommandHttp(method: string, params: any = {}): Pr
   const timeout = setTimeout(() => controller.abort(), REVIT_COMMAND_TIMEOUT_MS);
 
   try {
-    console.error(`[RevitHTTP] POST ${REVIT_HTTP_URL} → ${method}`);
-    const response = await fetch(REVIT_HTTP_URL, {
+    console.error(`[RevitHTTP] POST ${revitHttpUrl} → ${method}`);
+    const response = await fetch(revitHttpUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,
