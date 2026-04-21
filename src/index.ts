@@ -228,12 +228,6 @@ async function startHttp() {
 
   // Set REVIT_HTTP_URL at runtime — không cần redeploy khi Cloudflare URL thay đổi
   app.post("/set-revit-url", (req, res) => {
-    const authHeader = req.headers.authorization || "";
-    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-    if (token !== API_KEY) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
     const { url } = req.body as { url?: string };
     if (!url || typeof url !== "string" || !url.startsWith("http")) {
       res.status(400).json({ error: "Missing or invalid url" });
@@ -245,13 +239,7 @@ async function startHttp() {
   });
 
   // Get current REVIT_HTTP_URL
-  app.get("/revit-url", (req, res) => {
-    const authHeader = req.headers.authorization || "";
-    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-    if (token !== API_KEY) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+  app.get("/revit-url", (_req, res) => {
     res.json({ url: getRevitHttpUrl() || null });
   });
 
