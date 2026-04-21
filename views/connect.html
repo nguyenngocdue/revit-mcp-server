@@ -7,49 +7,174 @@
   <link rel="icon" type="image/png" href="/logos/logo_no_bg.png" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .card { background: #1a1d2e; border: 1px solid #2d3148; border-radius: 16px; padding: 48px; max-width: 520px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
-    .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
-    .logo img { width: 36px; height: 36px; }
-    .logo span { font-size: 18px; font-weight: 700; color: #f8fafc; }
-    h1 { font-size: 22px; font-weight: 700; color: #f8fafc; margin-bottom: 6px; }
-    .sub { color: #64748b; font-size: 14px; margin-bottom: 32px; }
-    label { display: block; font-size: 13px; font-weight: 600; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
-    input[type=text] { width: 100%; padding: 12px 16px; background: #0f1117; border: 1px solid #2d3148; border-radius: 8px; color: #f1f5f9; font-size: 14px; outline: none; transition: border-color 0.15s; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* Navbar */
+    .navbar { display: flex; align-items: center; gap: 12px; padding: 0 24px; height: 56px; background: #1a1d2e; border-bottom: 1px solid #2d3148; position: sticky; top: 0; z-index: 10; }
+    .navbar-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .navbar-logo img { width: 28px; height: 28px; }
+    .navbar-logo span { font-size: 15px; font-weight: 700; color: #f8fafc; }
+    .navbar-sep { width: 1px; height: 20px; background: #2d3148; margin: 0 4px; }
+    .navbar-page { font-size: 14px; color: #64748b; }
+    .navbar-nav { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+    .navbar-nav a { font-size: 13px; color: #64748b; text-decoration: none; padding: 5px 12px; border-radius: 6px; transition: all 0.15s; }
+    .navbar-nav a:hover { color: #e2e8f0; background: #2d3148; }
+    .navbar-nav a.active { color: #a5b4fc; background: #6366f122; }
+
+    .page-body { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+
+    /* 2-column layout */
+    .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; width: 100%; max-width: 1060px; align-items: start; }
+    @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+
+    .panel { background: #1a1d2e; border: 1px solid #2d3148; border-radius: 14px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
+    .panel-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 20px; }
+
+    /* Steps */
+    .steps { display: flex; flex-direction: column; gap: 20px; }
+    .step { display: flex; gap: 14px; align-items: flex-start; }
+    .step-num { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: #6366f122; border: 1px solid #6366f144; color: #a5b4fc; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+    .step-num.done { background: #22c55e22; border-color: #22c55e44; color: #22c55e; }
+    .step-body { flex: 1; min-width: 0; }
+    .step-label { font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 5px; }
+    .step-desc { font-size: 12px; color: #64748b; line-height: 1.6; }
+    .step-desc a { color: #6366f1; text-decoration: none; }
+    .step-desc a:hover { text-decoration: underline; }
+    .step-connector { width: 1px; background: #2d3148; height: 12px; margin: 2px 0 2px 12px; }
+
+    /* Code block */
+    .code-block { display: flex; align-items: center; gap: 8px; background: #0a0d14; border: 1px solid #2d3148; border-radius: 8px; padding: 10px 14px; margin-top: 8px; }
+    .code-block code { flex: 1; font-family: "Consolas", "Fira Code", monospace; font-size: 12px; color: #a5b4fc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .copy-btn { flex-shrink: 0; background: none; border: 1px solid #2d3148; border-radius: 6px; color: #64748b; font-size: 11px; font-weight: 600; padding: 4px 10px; cursor: pointer; transition: all 0.15s; }
+    .copy-btn:hover { border-color: #6366f1; color: #a5b4fc; background: #6366f111; }
+    .copy-btn.copied { border-color: #22c55e44; color: #22c55e; background: #22c55e11; }
+
+    /* Connect form */
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 7px; }
+    input[type=text] { width: 100%; padding: 11px 14px; background: #0a0d14; border: 1px solid #2d3148; border-radius: 8px; color: #f1f5f9; font-size: 13px; outline: none; transition: border-color 0.15s; }
     input[type=text]:focus { border-color: #6366f1; }
-    input[type=text]::placeholder { color: #475569; }
-    button { margin-top: 16px; width: 100%; padding: 13px; background: #6366f1; border: none; border-radius: 8px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
-    button:hover { background: #4f46e5; }
-    button:disabled { background: #374151; cursor: not-allowed; }
-    .status { margin-top: 20px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+    input[type=text]::placeholder { color: #374151; }
+    .connect-btn { width: 100%; padding: 12px; background: #6366f1; border: none; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; margin-top: 4px; }
+    .connect-btn:hover { background: #4f46e5; }
+    .connect-btn:disabled { background: #374151; cursor: not-allowed; }
+
+    .status { margin-top: 14px; padding: 11px 14px; border-radius: 8px; font-size: 13px; display: none; line-height: 1.5; }
     .status.ok { background: #22c55e22; border: 1px solid #22c55e44; color: #22c55e; }
     .status.err { background: #ef444422; border: 1px solid #ef444444; color: #f87171; }
-    .current { margin-top: 24px; padding: 12px 16px; background: #0f1117; border: 1px solid #2d3148; border-radius: 8px; font-size: 13px; color: #64748b; word-break: break-all; }
-    .current span { color: #a5b4fc; font-family: monospace; }
-    .back { display: inline-block; margin-top: 24px; font-size: 13px; color: #475569; text-decoration: none; }
-    .back:hover { color: #6366f1; }
+
+    .active-url { margin-top: 16px; padding: 12px 14px; background: #0a0d14; border: 1px solid #2d3148; border-radius: 8px; }
+    .active-url-label { font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
+    .active-url-value { font-family: "Consolas", monospace; font-size: 12px; color: #a5b4fc; word-break: break-all; }
+    .active-url-value.unset { color: #374151; font-style: italic; font-family: inherit; }
+
+    .hint { margin-top: 20px; padding: 12px 14px; background: #0ea5e911; border: 1px solid #0ea5e922; border-radius: 8px; font-size: 12px; color: #7dd3fc; line-height: 1.6; }
+    .hint strong { color: #38bdf8; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="logo">
+
+  <nav class="navbar">
+    <a class="navbar-logo" href="/">
       <img src="/logos/logo_no_bg.png" alt="DeepBIM" onerror="this.style.display='none'" />
       <span>DeepBIM MCP</span>
+    </a>
+    <div class="navbar-sep"></div>
+    <span class="navbar-page">Connect Revit</span>
+    <div class="navbar-nav">
+      <a href="/">Dashboard</a>
+      <a href="/connect" class="active">Connect Revit</a>
     </div>
-    <h1>Connect Revit Plugin</h1>
-    <p class="sub">Paste the Cloudflare Tunnel URL to connect your local Revit to this server.</p>
+  </nav>
 
-    <label for="urlInput">Cloudflare Tunnel URL</label>
-    <input type="text" id="urlInput" placeholder="https://xxxx.trycloudflare.com" value="{{CURRENT_URL}}" autocomplete="off" />
-    <button id="btn" onclick="setUrl()">Connect</button>
+  <div class="page-body">
+  <div class="layout">
 
-    <div class="status" id="status"></div>
+    <!-- Left: Setup guide -->
+    <div class="panel">
+      <div class="panel-title">Setup guide</div>
+      <div class="steps">
 
-    <div class="current">
-      Current URL: <span id="currentUrl">{{CURRENT_URL_DISPLAY}}</span>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-label">Install Cloudflared</div>
+            <div class="step-desc">
+              Download <a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/" target="_blank">cloudflared</a> on the machine running Revit. Quick install on Windows:
+            </div>
+            <div class="code-block">
+              <code>winget install Cloudflare.cloudflared</code>
+              <button class="copy-btn" onclick="copyText(this, 'winget install Cloudflare.cloudflared')">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-connector"></div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-label">Start Revit &amp; load the plugin</div>
+            <div class="step-desc">Open Revit, load the DeepBIM plugin. Confirm it is listening on port <strong style="color:#e2e8f0;">9080</strong>.</div>
+          </div>
+        </div>
+
+        <div class="step-connector"></div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-label">Start the tunnel</div>
+            <div class="step-desc">Run in a terminal on the Revit machine:</div>
+            <div class="code-block">
+              <code id="tunnelCmd">cloudflared tunnel --url http://localhost:9080</code>
+              <button class="copy-btn" onclick="copyText(this, 'cloudflared tunnel --url http://localhost:9080')">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-connector"></div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-label">Copy the generated URL</div>
+            <div class="step-desc">
+              After a few seconds, cloudflared prints a public URL:
+            </div>
+            <div class="code-block" style="margin-top:8px;">
+              <code style="color:#64748b;">https://xxxx.trycloudflare.com</code>
+            </div>
+            <div class="step-desc" style="margin-top:8px;">Copy it and paste into the form on the right →</div>
+          </div>
+        </div>
+
+      </div>
     </div>
 
-    <a class="back" href="/">← Back to Dashboard</a>
+    <!-- Right: Connect form -->
+    <div class="panel">
+      <div class="panel-title">Step 5 — Register URL</div>
+
+      <div class="form-group">
+        <label for="urlInput">Cloudflare Tunnel URL</label>
+        <input type="text" id="urlInput" placeholder="https://xxxx.trycloudflare.com" value="{{CURRENT_URL}}" autocomplete="off" />
+      </div>
+
+      <button class="connect-btn" id="btn" onclick="setUrl()">Connect</button>
+
+      <div class="status" id="status"></div>
+
+      <div class="active-url">
+        <div class="active-url-label">Active URL</div>
+        <div class="active-url-value {{CURRENT_URL_CLASS}}" id="currentUrl">{{CURRENT_URL_DISPLAY}}</div>
+      </div>
+
+      <div class="hint">
+        <strong>Every time</strong> you restart the Cloudflare tunnel, a new URL is generated. Simply paste the new URL here and click <strong>Connect</strong> — no server restart needed.
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -58,10 +183,7 @@
       const btn = document.getElementById('btn');
       const status = document.getElementById('status');
 
-      if (!url) {
-        showStatus('Please enter a URL.', false);
-        return;
-      }
+      if (!url) { showStatus('Please enter a URL.', false); return; }
 
       btn.disabled = true;
       btn.textContent = 'Connecting...';
@@ -76,7 +198,9 @@
         const data = await res.json();
         if (res.ok && data.ok) {
           showStatus('Connected! Revit URL updated successfully.', true);
-          document.getElementById('currentUrl').textContent = data.url;
+          const el = document.getElementById('currentUrl');
+          el.textContent = data.url;
+          el.classList.remove('unset');
         } else {
           showStatus(data.error || 'Failed to update URL.', false);
         }
@@ -95,9 +219,19 @@
       el.style.display = 'block';
     }
 
+    function copyText(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+
     document.getElementById('urlInput').addEventListener('keydown', e => {
       if (e.key === 'Enter') setUrl();
     });
   </script>
+  </div><!-- /page-body -->
 </body>
 </html>
+

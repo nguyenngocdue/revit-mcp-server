@@ -68,6 +68,7 @@ async function startHttp() {
     res.send(renderView("connect.html", {
       CURRENT_URL: currentUrl,
       CURRENT_URL_DISPLAY: currentUrl || "Not set",
+      CURRENT_URL_CLASS: currentUrl ? "" : "unset",
     }));
   });
 

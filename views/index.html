@@ -7,7 +7,21 @@
   <link rel="icon" type="image/png" href="/logos/logo_no_bg.png" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* Navbar */
+    .navbar { display: flex; align-items: center; gap: 12px; padding: 0 24px; height: 56px; background: #1a1d2e; border-bottom: 1px solid #2d3148; position: sticky; top: 0; z-index: 10; }
+    .navbar-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .navbar-logo img { width: 28px; height: 28px; }
+    .navbar-logo span { font-size: 15px; font-weight: 700; color: #f8fafc; }
+    .navbar-sep { width: 1px; height: 20px; background: #2d3148; margin: 0 4px; }
+    .navbar-page { font-size: 14px; color: #64748b; }
+    .navbar-nav { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+    .navbar-nav a { font-size: 13px; color: #64748b; text-decoration: none; padding: 5px 12px; border-radius: 6px; transition: all 0.15s; }
+    .navbar-nav a:hover { color: #e2e8f0; background: #2d3148; }
+    .navbar-nav a.active { color: #a5b4fc; background: #6366f122; }
+
+    .page-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 20px; }
     .card { background: #1a1d2e; border: 1px solid #2d3148; border-radius: 16px; padding: 48px; max-width: 560px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
     .badge { display: inline-block; background: #22c55e22; color: #22c55e; border: 1px solid #22c55e44; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 24px; }
     h1 { font-size: 28px; font-weight: 700; color: #f8fafc; margin-bottom: 4px; }
@@ -31,6 +45,19 @@
   </style>
 </head>
 <body>
+  <nav class="navbar">
+    <a class="navbar-logo" href="/">
+      <img src="/logos/logo_no_bg.png" alt="DeepBIM" onerror="this.style.display='none'" />
+      <span>DeepBIM MCP</span>
+    </a>
+    <div class="navbar-sep"></div>
+    <span class="navbar-page">Dashboard</span>
+    <div class="navbar-nav">
+      <a href="/" class="active">Dashboard</a>
+      <a href="/connect">Connect Revit</a>
+    </div>
+  </nav>
+  <div class="page-body">
   <div class="card">
     <div class="badge">● ONLINE</div>
     <h1>DeepBIM MCP Server</h1>
@@ -79,6 +106,7 @@
     <div class="footer">
       Built by <a href="https://github.com/deepbim" target="_blank">DeepBIM</a> &mdash; Powered by MCP SDK
     </div>
+  </div>
   </div>
 </body>
 </html>
