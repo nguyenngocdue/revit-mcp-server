@@ -8,8 +8,9 @@ import * as os from "os";
 // HuggingFace Hub repo that hosts grout_best.pt
 const HF_REPO_ID = process.env.GROUT_TUBE_HF_REPO ?? "nissan3008/grout-tube";
 
-// Python executable — override if needed (e.g. /usr/bin/python3)
-const PYTHON_BIN = process.env.GROUT_TUBE_PYTHON ?? "python3";
+// Python executable — on Windows, run via WSL automatically
+const IS_WINDOWS = process.platform === "win32";
+const PYTHON_BIN = process.env.GROUT_TUBE_PYTHON ?? (IS_WINDOWS ? "wsl" : "python3");
 
 const TIMEOUT_MS = 120_000; // 2 minutes — detection on large PDFs can be slow
 
@@ -81,7 +82,12 @@ function runGroutCheck(pdfPath: string, conf: number): Promise<unknown> {
     let finished = false;
 
     const script = buildInlineScript(pdfPath, conf, HF_REPO_ID);
-    const proc = spawn(PYTHON_BIN, ["-c", script]);
+    // On Windows: spawn wsl python3 -c "..."
+    // On Linux/Mac: spawn python3 -c "..."
+    const spawnArgs = IS_WINDOWS
+      ? ["python3", "-c", script]
+      : ["-c", script];
+    const proc = spawn(PYTHON_BIN, spawnArgs);
 
     const timer = setTimeout(() => {
       if (!finished) {
