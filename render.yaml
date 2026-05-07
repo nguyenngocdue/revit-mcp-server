@@ -3,7 +3,7 @@ services:
     name: revit-mcp-server
     runtime: node
     region: singapore
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --ignore-scripts && npm rebuild better-sqlite3 && npm run build
     startCommand: node build/index.js
     healthCheckPath: /health
     envVars:
